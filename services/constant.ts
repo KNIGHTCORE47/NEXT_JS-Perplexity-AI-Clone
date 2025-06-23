@@ -1,5 +1,5 @@
-
-interface ModelType {
+// NOTE - Define interface for LLM Model types
+export interface ModelType {
     id: number;
     name: string;
     desc: string;
@@ -7,7 +7,8 @@ interface ModelType {
 }
 
 
-interface SearchQuery {
+// NOTE - Define interface for Search Query type
+export interface SearchQuery {
     original: string;
     show_strict_warning: boolean;
     is_navigational: boolean;
@@ -23,27 +24,35 @@ interface SearchQuery {
     state: string;
 }
 
-interface MixedResultItem {
+
+// NOTE - Define interface for Mixed Result Item type
+export interface MixedResultItem {
     type: 'web' | 'videos';
     index?: number;
     all: boolean;
 }
 
-interface MixedResults {
+
+// NOTE - Define interface for Mixed Result type
+export interface MixedResults {
     type: 'mixed';
     main: MixedResultItem[];
     top: MixedResultItem[];
     side: MixedResultItem[];
 }
 
-interface VideoInfo {
+
+// NOTE - Define interface for Video file Result type
+export interface VideoInfo {
     duration?: string;
     views?: number;
     creator?: string;
     publisher?: string;
 }
 
-interface MetaUrl {
+
+// NOTE - Define interface for Meta Url type
+export interface MetaUrl {
     scheme: string;
     netloc: string;
     hostname: string;
@@ -51,13 +60,17 @@ interface MetaUrl {
     path: string;
 }
 
-interface Thumbnail {
+
+// NOTE - Define interface for Thumbnail type
+export interface Thumbnail {
     src: string;
     original: string;
     logo?: boolean;
 }
 
-interface VideoResult {
+
+// NOTE - Define interface for Video Result type
+export interface VideoResult {
     type: 'video_result';
     url: string;
     title: string;
@@ -69,20 +82,25 @@ interface VideoResult {
     page_age?: string;
 }
 
-interface VideoResults {
+
+// NOTE - Define interface for All Video Results type
+export interface VideoResults {
     type: 'videos';
     results: VideoResult[];
     mutated_by_goggles: boolean;
 }
 
-interface Profile {
+
+// NOTE - Define interface for Web Profile Result type
+export interface Profile {
     name: string;
     url: string;
     long_name: string;
     img: string;
 }
 
-interface WebResult {
+// NOTE - Define interface for Web Result type
+export interface WebResult {
     title: string;
     url: string;
     is_source_local: boolean;
@@ -98,13 +116,17 @@ interface WebResult {
     thumbnail?: Thumbnail;
 }
 
-interface WebResults {
+
+// NOTE - Define interface for Complete Web Results type
+export interface WebResults {
     type: 'search';
     results: WebResult[];
     family_friendly: boolean;
 }
 
-interface SearchResult {
+
+// NOTE - Define interface for Search Response type [Search API Response]
+export interface SearchResponseType {
     query: SearchQuery;
     mixed: MixedResults;
     type: 'search';
@@ -148,7 +170,8 @@ export const AI_MODELS: ModelType[] = [
 ] as const;
 
 
-export const SEARCH_RESULT: SearchResult = {
+// NOTE - Default Search Response [Mock Response Data]
+export const SEARCH_RESPONSE: SearchResponseType = {
     "query": {
         "original": "Tubeguruji Youtube",
         "show_strict_warning": false,
