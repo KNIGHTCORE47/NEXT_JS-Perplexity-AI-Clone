@@ -17,45 +17,66 @@ import {
     Search,
     Compass,
     GalleryHorizontalEnd,
-    LogIn,
+    LogOut,
     MoveUpRight
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { UserButton } from '@clerk/nextjs';
+import { useAuth } from '@clerk/clerk-react';
 
-
+// NOTE - Define interface for Sidebar Menu Items
 export interface MunuItems {
     title: string,
     icon: React.ReactNode,
-    path: string
+    path: string,
+    onClick?: () => void
 }
-
-const MenuOptions: MunuItems[] = [
-    {
-        title: 'Home',
-        icon: <Search />,
-        path: '/'
-    },
-    {
-        title: 'Discover',
-        icon: <Compass />,
-        path: '/discover'
-    },
-    {
-        title: 'Library',
-        icon: <GalleryHorizontalEnd />,
-        path: '/library'
-    },
-    {
-        title: 'Sign In',
-        icon: <LogIn />,
-        path: '#'
-    }
-]
-
-
 
 export default function AppSidebar() {
     const path = usePathname();
+    const { signOut, isLoaded } = useAuth();
+
+    async function handleSignOut() {
+        if (!isLoaded) return;
+
+        try {
+            signOut({
+                redirectUrl: '/sign-in',
+            });
+        } catch (error: any) {
+            console.error("Error signing out:", error);
+
+            // NOTE - Handle error
+            if (error instanceof Error) {
+                console.error("Error signing out:", error.message);
+            }
+        }
+    }
+
+
+    const MenuOptions: MunuItems[] = [
+        {
+            title: 'Home',
+            icon: <Search />,
+            path: '/'
+        },
+        {
+            title: 'Discover',
+            icon: <Compass />,
+            path: '/discover'
+        },
+        {
+            title: 'Library',
+            icon: <GalleryHorizontalEnd />,
+            path: '/library'
+        },
+        {
+            title: 'Sign Out',
+            icon: <LogOut />,
+            path: '#',
+            onClick: handleSignOut
+        }
+    ]
 
 
     return (
@@ -83,16 +104,38 @@ export default function AppSidebar() {
                                     key={index}
                                 >
                                     <SidebarMenuButton
-                                        asChild
+                                        asChild={!item.onClick} // NOTE - Only use asChild when there's no onClick
                                         className={`px-5 py-7 hover:bg-transparent hover:font-bold ${path.includes(item.path) && 'font-bold'}`}
+                                        onClick={item.onClick}
                                     >
-                                        <a
-                                            href={item.path}
-                                            className=''
-                                        >
-                                            {item.icon && <span className='mr-2'>{item.icon}</span>}
-                                            <span className='text-lg'>{item.title}</span>
-                                        </a>
+                                        {
+                                            item.onClick ? (
+                                                // NOTE - For items with onClick (like Sign Out)
+                                                <div
+                                                    className='flex items-center cursor-pointer'
+                                                >
+                                                    {item.icon && <span className='mr-2'>{item.icon}</span>}
+                                                    <span
+                                                        className='text-lg'
+                                                    >
+                                                        {item.title}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                // NOTE - For items without onClick [Regular Menu Items]
+                                                <a
+                                                    href={item.path}
+                                                    className=''
+                                                >
+                                                    {item.icon && <span className='mr-2'>{item.icon}</span>}
+                                                    <span
+                                                        className='text-lg'
+                                                    >
+                                                        {item.title}
+                                                    </span>
+                                                </a>
+                                            )
+                                        }
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}
@@ -101,7 +144,11 @@ export default function AppSidebar() {
                         <Button
                             className={`rounded-full bg-[#2e757d] mx-4 mt-2`}
                         >
-                            Sign Up
+                            <span
+                                className='text-white'
+                            >
+                                Upgrade
+                            </span>
                         </Button>
                     </SidebarContent>
                 </SidebarGroup>
@@ -110,17 +157,29 @@ export default function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter className='bg-[#eff0eb] p-6'>
-                <div className='text-gray-600'>
-                    <h1 className='text-gray-800 font-bold'>Try Now</h1>
+                <div
+                    className='text-gray-600'
+                >
+                    <h1
+                        className='text-gray-800 font-bold'
+                    >
+                        Try Now
+                    </h1>
                     <p>Upgrade for image upload,
                         smarter AI & more copilot
                     </p>
-                    <Button
-                        variant={'outline'}
-                        className=''
+                    <div
+                        className='flex flex-col items-center gap-2 mt-2'
                     >
-                        <MoveUpRight />{" "}Learn More
-                    </Button>
+                        <Button
+                            variant={'outline'}
+                            className='w-full'
+                        >
+                            <MoveUpRight />{" "}Learn More
+                        </Button>
+
+                        <UserButton />
+                    </div>
                 </div>
             </SidebarFooter>
         </Sidebar >
