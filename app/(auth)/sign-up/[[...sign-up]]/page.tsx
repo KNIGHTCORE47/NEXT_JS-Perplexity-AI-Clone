@@ -3,7 +3,7 @@
 import React from 'react'
 import SignUpForm from '@/components/SignUpForm'
 
-export default function page() {
+export default function SignUpPage() {
     return (
         <div
             className="min-h-screen w-full flex flex-col"
