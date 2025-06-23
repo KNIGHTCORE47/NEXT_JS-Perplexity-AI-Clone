@@ -8,6 +8,7 @@ import {
 import AppSidebar from '@/components/AppSidebarComponent';
 import { ClerkProvider } from '@clerk/nextjs';
 import { auth } from '@clerk/nextjs/server';
+import Provider from './provider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,27 +40,29 @@ export default async function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          {
-            userId ? (
-              <SidebarProvider>
-                <AppSidebar />
+          <Provider >
+            {
+              userId ? (
+                <SidebarProvider>
+                  <AppSidebar />
+                  <main
+                    className="flex-1 flex items-center justify-center"
+                  >
+                    <SidebarTrigger
+                      className="absolute left-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background shadow-md hover:bg-accent hover:text-accent-foreground"
+                    />
+                    {children}
+                  </main>
+                </SidebarProvider>
+              ) : (
                 <main
-                  className="flex-1 flex items-center justify-center bg-gray-400"
+                  className="flex-1 flex items-center justify-center"
                 >
-                  <SidebarTrigger
-                    className="absolute left-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background shadow-md hover:bg-accent hover:text-accent-foreground"
-                  />
                   {children}
                 </main>
-              </SidebarProvider>
-            ) : (
-              <main
-                className="flex-1 flex items-center justify-center bg-gray-400"
-              >
-                {children}
-              </main>
-            )
-          }
+              )
+            }
+          </Provider>
         </body>
       </html>
     </ClerkProvider>
