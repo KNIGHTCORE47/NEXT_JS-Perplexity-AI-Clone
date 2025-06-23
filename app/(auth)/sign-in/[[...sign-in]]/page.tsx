@@ -3,7 +3,7 @@
 import React from 'react'
 import SignInForm from '@/components/SignInForm'
 
-function page() {
+export default function SignInPage() {
     return (
         <div
             className="min-h-screen w-full flex flex-col"
@@ -18,4 +18,3 @@ function page() {
     )
 }
 
-export default page
