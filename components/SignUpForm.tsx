@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSignUp } from "@clerk/nextjs";
+import { isClerkAPIError } from '@/services/constant';
 
 import {
     Form,
@@ -95,11 +96,19 @@ export default function SignUpForm() {
             //NOTE - Set Verification State
             setIsVerifying(true);
 
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error signing up:", error);
 
-            // NOTE - Set Error 
-            setAuthError(error.errors?.[0]?.message || "Failed to sign up. Please try again.");
+            // NOTE - Type guard for Clerk API errors
+            if (isClerkAPIError(error)) {
+                // NOTE - Set Error 
+                setAuthError(error.errors?.[0]?.message || "Failed to sign up. Please try again.");
+            } else if (error instanceof Error) {
+                setAuthError(error.message || "Failed to sign up. Please try again.");
+            } else {
+                setAuthError("Failed to sign up. Please try again.");
+            }
+
 
         } finally {
             // NOTE - Unload Spinner
@@ -142,12 +151,18 @@ export default function SignUpForm() {
                 setVerificationCodeError("Your OTP verification could not be completed. Please try again.");
             };
 
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error signing up:", error);
 
-            // NOTE - Set Error 
-            setVerificationCodeError(error.errors?.[0]?.message || "An error occurred during one-time password verification. Please try again.");
-
+            // NOTE - Type guard for Clerk API errors
+            if (isClerkAPIError(error)) {
+                // NOTE - Set Error 
+                setVerificationCodeError(error.errors?.[0]?.message || "An error occurred during one-time password verification. Please try again.");
+            } else if (error instanceof Error) {
+                setVerificationCodeError(error.message || "An error occurred during one-time password verification. Please try again.");
+            } else {
+                setVerificationCodeError("An error occurred during one-time password verification. Please try again.");
+            }
         } finally {
             // NOTE - Unload Spinner
             setIsSubmitting(false);
@@ -171,11 +186,19 @@ export default function SignUpForm() {
                 strategy: "email_code",
             });
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error signing up:", error);
 
-            // NOTE - Set Error 
-            setVerificationCodeError(error.errors?.[0]?.message || "Failed to resend verification code. Please try again.");
+            // NOTE - Type guard for Clerk API errors
+            if (isClerkAPIError(error)) {
+                // NOTE - Set Error 
+                setVerificationCodeError(error.errors?.[0]?.message || "Failed to resend verification code. Please try again.");
+            } else if (error instanceof Error) {
+                setVerificationCodeError(error.message || "Failed to resend verification code. Please try again.");
+            } else {
+                setVerificationCodeError("Failed to resend verification code. Please try again.");
+            }
+
         } finally {
             // NOTE - Unload Spinner
             setIsSubmitting(false);
@@ -227,7 +250,7 @@ export default function SignUpForm() {
                     <p
                         className='text-sm text-muted-foreground'
                     >
-                        We've sent a verification code to your email address. Please enter the code below to complete your account setup.
+                        We&apos;ve sent a verification code to your email address. Please enter the code below to complete your account setup.
                     </p>
                 </div>
 
