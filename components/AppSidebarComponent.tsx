@@ -43,12 +43,15 @@ export default function AppSidebar() {
             signOut({
                 redirectUrl: '/sign-in',
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error signing out:", error);
 
             // NOTE - Handle error
             if (error instanceof Error) {
-                console.error("Error signing out:", error.message);
+                console.error("Error signing out [message]:", error.message);
+                console.error("Error signing out [stack]:", error.stack);
+            } else {
+                console.error("Unknown error signing out:", error);
             }
         }
     }
