@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSignIn } from "@clerk/nextjs";
+import { isClerkAPIError } from '@/services/constant';
 
 import {
     Form,
@@ -85,11 +86,20 @@ export default function SignInForm() {
                 setAuthError("Sign in could not be completed. Please try again.");
             }
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error signing in:", error);
 
-            // NOTE - Set Error 
-            setAuthError(error.errors?.[0]?.message || "Failed to sign in. Please try again.");
+            // NOTE - Type guard for Clerk API errors
+            if (isClerkAPIError(error)) {
+                // NOTE - Set Error 
+                setAuthError(error.errors?.[0]?.message || "Failed to sign in. Please try again.");
+            } else if (error instanceof Error) {
+                // NOTE - Set Error 
+                setAuthError(error.message || "Failed to sign in. Please try again.");
+            } else {
+                // NOTE - Set Error 
+                setAuthError("Failed to sign in. Please try again.");
+            }
 
         } finally {
             // NOTE - Unload Spinner
@@ -234,7 +244,7 @@ export default function SignInForm() {
                 <p
                     className='text-sm text-muted-foreground'
                 >
-                    D&#39;ont have an account?{' '}
+                    Don&#39;t have an account?{' '}
                     <Link
                         href="/sign-up"
                         className="text-[#2e757d] hover:text-[#2e757d]/80 underline underline-offset-4"
