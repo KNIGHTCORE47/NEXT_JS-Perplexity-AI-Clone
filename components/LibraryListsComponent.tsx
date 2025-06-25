@@ -34,9 +34,8 @@ export default function LibraryListsComponent() {
         }
     }
 
-
-    // NOTE - Get History Data From DB
-    async function getLibraryData() {
+    // NOTE - Get History Data From DB [useCallBack for performance optimization and memoization of the function to avoid unnecessary re-renders]
+    const getLibraryData = React.useCallback(async function () {
         const email_id = user?.primaryEmailAddress?.emailAddress || userDetail?.email;
 
         // Early return if no email available
@@ -52,14 +51,20 @@ export default function LibraryListsComponent() {
             const result = await getAllLibraryDataFromDB(email_id as string);
 
             setLibraryData(result);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error getting all library data from db:", error);
 
-            throw error;
+            // NOTE - Handle error
+            if (error instanceof Error) {
+                console.error("Error getting all library data from db [message]:", error.message);
+                console.error("Error getting all library data from db [stack]:", error.stack);
+            } else {
+                console.error("Unknown error getting all library data from db:", error);
+            }
         } finally {
             setLoading(false);
         }
-    }
+    }, [user?.primaryEmailAddress?.emailAddress, userDetail?.email]);
 
 
     // NOTE - Fetch User Search Data When User Data is Available
@@ -78,7 +83,7 @@ export default function LibraryListsComponent() {
             // User is loaded but no email available
             setLoading(false);
         }
-    }, [isLoaded, user?.primaryEmailAddress?.emailAddress, userDetail?.email]);
+    }, [isLoaded, user?.primaryEmailAddress?.emailAddress, userDetail?.email, getLibraryData]);
 
 
     // NOTE - Method to upadate ui upon successful delete history
@@ -125,7 +130,7 @@ export default function LibraryListsComponent() {
                     Library
                 </h2>
 
-                <p>Unable to load library data. Please make sure you're logged in.</p>
+                <p>Unable to load library data. Please make sure you&apos;re logged in.</p>
             </div>
         );
     }
@@ -178,7 +183,7 @@ export default function LibraryListsComponent() {
                                     <DeleteHistoryBtnComponent
                                         libraryId={item.library_id!}
                                         webSearchInput={item.search_input!}
-                                        userEmail={user?.primaryEmailAddress?.emailAddress || userDetail?.email!}
+                                        userEmail={user?.primaryEmailAddress?.emailAddress || userDetail?.email || ''}
                                         onDelete={() => handleDleteSuccess(item.library_id!)}
                                     />
                                 </div>
