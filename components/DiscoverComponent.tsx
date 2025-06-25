@@ -59,7 +59,8 @@ export default function DiscoverComponent() {
     const [latestDiscovery, setLatestDiscovery] = React.useState<WebResult[]>([]);
     const [loading, setLoading] = React.useState<boolean>(false);
 
-    async function GetDicoveryResponseFormAPI() {
+    // NOTE - Get Discovery API Response [useCallBack for performance optimization and memoization of the function to avoid unnecessary re-renders]
+    const GetDicoveryResponseFormAPI = React.useCallback(async function () {
         setLoading(true);
 
         try {
@@ -84,23 +85,31 @@ export default function DiscoverComponent() {
             setLatestDiscovery(CompleteWebResponse?.web?.results as WebResult[]);
 
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error Getting API Response:", error);
 
-            throw error;
+            // NOTE - Handle Error
+            if (error instanceof Error) {
+                console.error("Error Getting API Response [message]:", error.message);
+                console.error("Error Getting API Response [stack]:", error.stack);
+            } else {
+                console.error("Unknown error Getting API Response:", error);
+            }
         } finally {
             setLoading(false);
         }
-    }
-
-
-    React.useEffect(() => {
-        selectedOption && GetDicoveryResponseFormAPI();
     }, [selectedOption]);
 
 
+    React.useEffect(() => {
+        if (selectedOption) {
+            GetDicoveryResponseFormAPI();
+        }
+    }, [selectedOption, GetDicoveryResponseFormAPI]);
 
-    {/* NOTE - Render Loader [Skeleton] */ }
+
+
+    // NOTE - Render Loader [Skeleton]
     if (loading) {
         return (
             <div
