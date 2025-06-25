@@ -1,5 +1,5 @@
 "use client";
-{/* Search Result - child component [com 2] */ }
+/* Search Result - child component [com 2] */
 
 import { CompleteResponseType } from './SearchQueryComponent';
 import React from 'react'
@@ -100,39 +100,125 @@ export default function DisplayResultUI(
     const hasFetchedRef = React.useRef(false);
 
 
-    React.useEffect(() => {
 
-        if (!searchInputReacord?.search_input) {
-            console.log("No search input found, waiting for data...");
-            return;
+    // NOTE - Get Final Rendered Response From DB
+    const getFinalRenderedResponseFromDB = React.useCallback(async function () {
+        try {
+            const { data: CompeteData, error } = await getUserSearchDataFromDB(libId as string);
+
+            if (error) {
+                console.error("Error Getting complete db response data:", error);
+
+                throw error;
+            }
+
+            setSearchResult(CompeteData?.[0] as CompleteResponseType);
+
+        } catch (error: unknown) {
+            console.error("Error Getting complete db response data:", error);
+
+            // NOTE - Handle Error
+            if (error instanceof Error) {
+                console.error("Error Getting complete db response data [message]:", error.message);
+
+                console.error("Error Getting complete db response data [stack]:", error.stack);
+            } else {
+                console.error("Unknown error Getting complete db response data:", error);
+            }
         }
+    }, [libId]);
 
-        {/*
-            ********* NOTE - LOGIC ********
 
-            logic is the user after type search_input data from homepage redirect to the Result page where upon refresh the page dom will not refresh cause i will restrict the function for it (getSearchAPIWithLLMDataResponse) which save my search api token multiple db calls for saving same data and LLM Api token along with thet after getting the complete data from the search api i will save the data to the db and then i will fetch the data from the db and render the data and if the data is not in the db then i will make the api calls call the function (getFinalRenderedResponseFromDB)
+    // NOTE - Generate LLM API Response
+    const genarateLLMAPIResponse = React.useCallback(async function (
+        formattedData: FormattedResponseType[],
+        recordId: string
+    ) {
+        try {
+            // Use the current userNewInput or the original search input
+            const searchQuery = userNewInput.trim() || searchInputReacord?.search_input || "";
 
-        */}
+            // NOTE - Generate LLM API Response ID [AI Api Call]
+            const response = await fetchLLMAPIResponse(
+                searchQuery,
+                formattedData ?? [],
+                recordId ?? ""
+            )
 
-        if (
-            !hasFetchedRef.current &&
-            searchInputReacord?.Chats?.length === 0
-        ) {
-            getSearchAPIWithLLMDataResponse();
-            hasFetchedRef.current = true;
-        } else if (Array.isArray(searchInputReacord?.Chats) && searchInputReacord.Chats.length > 0) {
-            getFinalRenderedResponseFromDB();
-            hasFetchedRef.current = true;
+            // console.log("LLM API Response:", response);
+
+            if (!response?.ok) {
+                console.error("Error generating LLM API Response:", response);
+
+                throw new Error("Error generating LLM API Response");
+            }
+
+            const data = await response.json();
+
+            const llmId = data?.data?.ids?.[0];
+
+            // console.log("LLM API Response Data:", llmId);
+
+            // NOTE - Get Status of LLM API Response [AI Api Call] (Interval Call for Polling)
+            const interval = setInterval(async () => {
+                try {
+                    const statusResponse = await fetchLLMAPIStatus(llmId ?? "");
+
+                    if (!statusResponse?.ok) {
+                        console.error("Error generating LLM API Response:", statusResponse);
+
+                        clearInterval(interval);
+                        return;
+                    }
+
+                    const statusData = await statusResponse.json();
+
+                    // console.log("LLM API Status Data:", statusData.data);
+
+                    const statusText = statusData.data?.data?.[0]?.status;
+
+                    // NOTE - Check for LLM API Response Status [AI Api Call]
+                    if (statusText === "Completed") {
+                        console.log("LLM API Response Completed");
+
+                        await getFinalRenderedResponseFromDB();
+
+                        clearInterval(interval);
+                    } else if (statusText === "Failed") {
+                        console.error("LLM API Response Failed");
+                        clearInterval(interval);
+                    }
+
+                } catch (error: unknown) {
+                    console.error("Error in polling:", error);
+                    clearInterval(interval);
+                }
+            }, 1000);
+
+            // Add timeout to prevent infinite polling
+            setTimeout(() => {
+                clearInterval(interval);
+                console.warn("LLM API polling timeout");
+            }, 60000); // 1 minute timeout
+
+
+        } catch (error: unknown) {
+            console.error("Error generating LLM API Response:", error);
+
+            // NOTE - Handle Error
+            if (error instanceof Error) {
+                console.error("Error generating LLM API Response [message]:", error.message);
+
+                console.error("Error generating LLM API Response [stack]:", error.stack);
+            } else {
+                console.error("Unknown error generating LLM API Response:", error);
+            }
         }
-
-        setSearchResult(searchInputReacord);
-    }, [searchInputReacord]);
-
-
+    }, [searchInputReacord?.search_input, userNewInput, getFinalRenderedResponseFromDB]);
 
 
     // NOTE - Fetch Search API Response
-    async function getSearchAPIWithLLMDataResponse(event: React.FormEvent<HTMLFormElement> | null = null) {
+    const getSearchAPIWithLLMDataResponse = React.useCallback(async function (event: React.FormEvent<HTMLFormElement> | null = null) {
         event?.preventDefault();
 
         setLoading(true);
@@ -213,116 +299,54 @@ export default function DisplayResultUI(
             await getFinalRenderedResponseFromDB();
 
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error fetching user search web response:", error);
+
+            // NOTE - Handle Error
+            if (error instanceof Error) {
+                console.error("Error fetching user search web response [message]:", error.message);
+
+                console.error("Error fetching user search web response [stack]:", error.stack);
+            } else {
+                console.error("Unknown error fetching user search web response:", error);
+            }
 
             throw error;
         } finally {
             setLoading(false);
             setUserNewInput('');
         }
-    }
+    }, [searchInputReacord?.search_input, searchInputReacord?.search_type, userNewInput, libId, getFinalRenderedResponseFromDB, genarateLLMAPIResponse]);
 
 
-    // NOTE - Generate LLM API Response
-    async function genarateLLMAPIResponse(
-        formattedData: FormattedResponseType[],
-        recordId: string
-    ) {
-        try {
-            // Use the current userNewInput or the original search input
-            const searchQuery = userNewInput.trim() || searchInputReacord?.search_input || "";
+    React.useEffect(() => {
 
-            // NOTE - Generate LLM API Response ID [AI Api Call]
-            const response = await fetchLLMAPIResponse(
-                searchQuery,
-                formattedData ?? [],
-                recordId ?? ""
-            )
-
-            // console.log("LLM API Response:", response);
-
-            if (!response?.ok) {
-                console.error("Error generating LLM API Response:", response);
-
-                throw new Error("Error generating LLM API Response");
-            }
-
-            const data = await response.json();
-
-            const llmId = data?.data?.ids?.[0];
-
-            // console.log("LLM API Response Data:", llmId);
-
-            // NOTE - Get Status of LLM API Response [AI Api Call] (Interval Call for Polling)
-            const interval = setInterval(async () => {
-                try {
-                    const statusResponse = await fetchLLMAPIStatus(llmId ?? "");
-
-                    if (!statusResponse?.ok) {
-                        console.error("Error generating LLM API Response:", statusResponse);
-
-                        clearInterval(interval);
-                        return;
-                    }
-
-                    const statusData = await statusResponse.json();
-
-                    // console.log("LLM API Status Data:", statusData.data);
-
-                    const statusText = statusData.data?.data?.[0]?.status;
-
-                    // NOTE - Check for LLM API Response Status [AI Api Call]
-                    if (statusText === "Completed") {
-                        console.log("LLM API Response Completed");
-
-                        await getFinalRenderedResponseFromDB();
-
-                        clearInterval(interval);
-                    } else if (statusText === "Failed") {
-                        console.error("LLM API Response Failed");
-                        clearInterval(interval);
-                    }
-
-                } catch (error) {
-                    console.error("Error in polling:", error);
-                    clearInterval(interval);
-                }
-            }, 1000);
-
-            // Add timeout to prevent infinite polling
-            setTimeout(() => {
-                clearInterval(interval);
-                console.warn("LLM API polling timeout");
-            }, 60000); // 1 minute timeout
-
-
-        } catch (error: any) {
-            console.error("Error generating LLM API Response:", error);
-
-            throw error;
+        if (!searchInputReacord?.search_input) {
+            console.log("No search input found, waiting for data...");
+            return;
         }
-    }
 
-    // NOTE - Get Final Rendered Response From DB
-    async function getFinalRenderedResponseFromDB() {
-        try {
-            let { data: CompeteData, error } = await getUserSearchDataFromDB(libId as string);
+        {/*
+            ********* NOTE - LOGIC ********
 
-            if (error) {
-                console.error("Error Getting complete db response data:", error);
+            logic is the user after type search_input data from homepage redirect to the Result page where upon refresh the page dom will not refresh cause i will restrict the function for it (getSearchAPIWithLLMDataResponse) which save my search api token multiple db calls for saving same data and LLM Api token along with thet after getting the complete data from the search api i will save the data to the db and then i will fetch the data from the db and render the data and if the data is not in the db then i will make the api calls call the function (getFinalRenderedResponseFromDB)
 
-                throw error;
-            }
+        */}
 
-            setSearchResult(CompeteData?.[0] as CompleteResponseType);
-
-        } catch (error: any) {
-            console.error("Error Getting complete db response data:", error);
-
-            throw error;
+        if (
+            !hasFetchedRef.current &&
+            searchInputReacord?.Chats?.length === 0
+        ) {
+            getSearchAPIWithLLMDataResponse();
+            hasFetchedRef.current = true;
+        } else if (Array.isArray(searchInputReacord?.Chats) && searchInputReacord.Chats.length > 0) {
+            getFinalRenderedResponseFromDB();
+            hasFetchedRef.current = true;
         }
-    }
+
+        setSearchResult(searchInputReacord);
+    }, [searchInputReacord, getSearchAPIWithLLMDataResponse, getFinalRenderedResponseFromDB]);
+
 
 
     return (
