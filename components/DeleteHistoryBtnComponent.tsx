@@ -40,10 +40,16 @@ export default function DeleteHistoryBtnComponent({
                 onDelete();
             }
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error removing history data from db:", error);
 
-            throw error;
+            // NOTE - Handle error
+            if (error instanceof Error) {
+                console.error("Error removing history data from db [message]:", error.message);
+                console.error("Error removing history data from db [stack]:", error.stack);
+            } else {
+                console.error("Unknown error removing history data from db:", error);
+            }
         }
     }
 
