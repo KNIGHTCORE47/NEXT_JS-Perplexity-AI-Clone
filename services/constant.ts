@@ -1,3 +1,23 @@
+// NOTE - Define clerk Error interface
+export interface ClerkError {
+    code: string;
+    message: string;
+    longMessage?: string;
+    meta?: {
+        paramName?: string;
+        sessionId?: string;
+        [key: string]: unknown;
+    }
+}
+
+
+// NOTE - Define clerk API Error interface
+export interface ClerkAPIError {
+    errors: ClerkError[];
+    [key: string]: unknown;
+}
+
+
 // NOTE - Define interface for LLM Model types
 export interface ModelType {
     id: number;
@@ -132,6 +152,20 @@ export interface SearchResponseType {
     type: 'search';
     videos: VideoResults;
     web: WebResults;
+}
+
+
+// NOTE - Type guard Function for Clerk API Errors
+export function isClerkAPIError(error: unknown): error is ClerkAPIError {
+    return (
+        typeof error === "object" &&
+        error !== null &&
+        "errors" in error &&
+        Array.isArray((error as ClerkAPIError).errors) &&
+        (error as ClerkAPIError).errors.length > 0 &&
+        typeof (error as ClerkAPIError).errors[0] === "object" &&
+        typeof (error as ClerkAPIError).errors[0].message === "string"
+    )
 }
 
 
