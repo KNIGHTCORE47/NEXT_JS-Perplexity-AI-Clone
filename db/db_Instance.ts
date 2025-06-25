@@ -87,10 +87,14 @@ export async function createNewUserToDB(user: User) {
 
         return data as DatabaseUser;
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error creating user:", error);
 
-        throw error;
+        if (error instanceof Error) {
+            throw error;
+        } else {
+            throw new Error("Error creating user");
+        }
     }
 }
 
@@ -125,10 +129,14 @@ export async function saveUserSearchToDB({
 
         return result;
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error saving user search into DB:", error);
 
-        throw error;
+        if (error instanceof Error) {
+            throw error;
+        } else {
+            throw new Error("Error saving user search into DB");
+        }
     }
 }
 
@@ -145,10 +153,14 @@ export async function getUserSearchDataFromDB(libId: string) {
                 ascending: true
             });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error fetching user search data:", error);
 
-        throw error;
+        if (error instanceof Error) {
+            throw error;
+        } else {
+            throw new Error("Error fetching user search data");
+        }
     }
 }
 
@@ -182,10 +194,14 @@ export async function saveFetchedWebResponseToDB(
 
         return data;
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error saving fetched web response to DB:", error);
 
-        throw error;
+        if (error instanceof Error) {
+            throw error;
+        } else {
+            throw new Error("Error saving fetched web response to DB");
+        }
     }
 }
 
@@ -210,10 +226,14 @@ export async function updatedUserSearchedWebResponseWithLLMDataToDB(
 
         return data;
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error updating fetched web response with latest llm data to DB:", error);
 
-        throw error;
+        if (error instanceof Error) {
+            throw error;
+        } else {
+            throw new Error("Error updating fetched web response with latest llm data to DB");
+        }
     }
 };
 
@@ -235,16 +255,19 @@ export async function getAllLibraryDataFromDB(email_id: string) {
         return Library;
 
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error getting all library data from db:", error);
 
-        throw error;
+        if (error instanceof Error) {
+            throw error;
+        } else {
+            throw new Error("Error getting all library data from db");
+        }
     }
 }
 
 
 // NOTE - Delete Library data along with Chats Data [History] from the db [DB Query]
-
 export async function removeExactLibraryAndChatsDataFromDB(
     libId: string,
     searchInput: string,
@@ -281,9 +304,13 @@ export async function removeExactLibraryAndChatsDataFromDB(
             throw libraryDeleteError;
         }
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error removing exact library and chats data from db:", error);
 
-        throw error;
+        if (error instanceof Error) {
+            throw error;
+        } else {
+            throw new Error("Error removing exact library and chats data from db");
+        }
     }
 }
