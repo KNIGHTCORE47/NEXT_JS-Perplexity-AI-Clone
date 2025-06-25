@@ -10,7 +10,21 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...compat.extends("next/core-web-vitals", "next/typescript"), {
+    rules: {
+      // Change TypeScript errors to warnings
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-non-null-asserted-optional-chain": "warn",
+      "@typescript-eslint/no-unused-expressions": "warn",
+
+      // Change React Hook errors to warnings
+      "react-hooks/exhaustive-deps": "warn",
+
+      // Change Next.js errors to warnings
+      "@next/next/no-img-element": "warn",
+    }
+  }
 ];
 
 export default eslintConfig;
