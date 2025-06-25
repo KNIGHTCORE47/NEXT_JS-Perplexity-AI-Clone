@@ -61,15 +61,10 @@ export default function SearchQueryComponent(
         created_at: ''
     });
 
-
-    // NOTE - Fetch User Search Data Upon Component Mount
-    React.useEffect(() => {
-        getSearchInputReacord();
-    }, []);
-
-    async function getSearchInputReacord() {
+    // NOTE - Get User Searched Data From DB along with Chats [useCallBack for performance optimization and memoization of the function to avoid unnecessary re-renders]
+    const getSearchInputReacord = React.useCallback(async function () {
         try {
-            let { data, error } = await getUserSearchDataFromDB(libId as string);
+            const { data, error } = await getUserSearchDataFromDB(libId as string);
 
             if (error) {
                 console.error("Error fetching user search data:", error);
@@ -84,12 +79,25 @@ export default function SearchQueryComponent(
                 setSearchInputReacord(data?.[0] as CompleteResponseType);
             };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error fetching user search data:", error);
 
-            throw error;
+            // NOTE - Handle Error
+            if (error instanceof Error) {
+                console.error("Error fetching user search data [message]:", error.message);
+
+                console.error("Error fetching user search data [stack]:", error.stack);
+            } else {
+                console.error("Unknown error fetching user search data:", error);
+            }
         }
-    }
+    }, [libId]);
+
+
+    // NOTE - Fetch User Search Data Upon Component Mount
+    React.useEffect(() => {
+        getSearchInputReacord();
+    }, [getSearchInputReacord]);
 
 
     return (
